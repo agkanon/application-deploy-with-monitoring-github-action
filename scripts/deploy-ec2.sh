@@ -301,14 +301,11 @@ install_grafana
 create_monitoring_user
 install_systemd_services
 
-# Get EC2 public IP
-EC2_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo "EC2_HOST")
-
-cat <<EOF
+cat <<'EOF'
 Deployment completed.
-- Frontend served from http://${EC2_IP}/
-- Backend API available from http://${EC2_IP}/api
-- Prometheus available at http://${EC2_IP}:9090
-- Grafana available at http://${EC2_IP}:3001
-- Alertmanager available at http://${EC2_IP}:9093
+- Frontend served from http://<EC2_HOST>/
+- Backend API available at http://<EC2_HOST>/api
+- Prometheus available at http://<EC2_HOST>:9090
+- Grafana available at http://<EC2_HOST>:3001
+- Alertmanager available at http://<EC2_HOST>:9093
 EOF
