@@ -171,6 +171,7 @@ function deploy_frontend() {
 function start_backend_process() {
   echo "Starting backend with PM2"
   cd "${APP_ROOT}/backend"
+  npm install --production
   if pm2 describe bmi-backend >/dev/null 2>&1; then
     pm2 restart bmi-backend
   else
