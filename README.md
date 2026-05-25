@@ -10,6 +10,11 @@ The repository contains:
 - monitoring configuration for Prometheus, Grafana, Alertmanager, and Node Exporter
 - an EC2 deployment script that installs and configures the app and monitoring stack
 
+# Monitoring ScreenShot
+
+- ![USAGE](monitoring/screenshot/USAGE.PNG)
+- ![prometheus](monitoring/screenshot/prometheus.PNG)
+
 ## 📋 Table of Contents
 
 - [Features](#features)
