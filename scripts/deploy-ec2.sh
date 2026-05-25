@@ -66,6 +66,18 @@ function setup_postgres() {
     sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
   fi
+
+  # Configure pg_hba.conf for password authentication
+  echo "Configuring PostgreSQL authentication"
+  PG_HBA=$(sudo -u postgres psql -t -P format=unaligned -c 'SHOW hba_file')
+  sudo cp "$PG_HBA" "${PG_HBA}.backup"
+  
+  # Add authentication rule if it doesn't already exist
+  if ! sudo grep -q "host    ${DB_NAME}    ${DB_USER}    127.0.0.1/32    md5" "$PG_HBA"; then
+    sudo sed -i "/^# IPv4 local connections:/a host    ${DB_NAME}    ${DB_USER}    127.0.0.1/32    md5" "$PG_HBA"
+  fi
+  
+  sudo systemctl reload postgresql
 }
 
 function run_migrations() {
