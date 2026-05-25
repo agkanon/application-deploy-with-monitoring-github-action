@@ -71,14 +71,28 @@ function setup_postgres() {
 function run_migrations() {
   echo "Applying database migrations"
   cd "${BACKEND_SRC}"
-  sudo -u postgres psql "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}" -c "CREATE SCHEMA IF NOT EXISTS public;"
+  
+  # Grant necessary privileges to the database user on the public schema
+  sudo -u postgres psql -d "${DB_NAME}" <<EOF
+-- Ensure public schema exists
+CREATE SCHEMA IF NOT EXISTS public;
 
-  if ! sudo -u postgres psql -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'measurements'" | grep -q 1; then
-    sudo -u postgres psql "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}" -f migrations/001_create_measurements.sql
+-- Grant permissions on public schema to the application user
+GRANT USAGE ON SCHEMA public TO ${DB_USER};
+GRANT CREATE ON SCHEMA public TO ${DB_USER};
+
+-- Set default privileges so all future objects are accessible to the user
+ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON TABLES TO ${DB_USER};
+ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO ${DB_USER};
+ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO ${DB_USER};
+EOF
+
+  if ! sudo -u postgres psql -d "${DB_NAME}" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'measurements'" | grep -q 1; then
+    sudo -u postgres psql -d "${DB_NAME}" -f migrations/001_create_measurements.sql
   fi
 
-  if ! sudo -u postgres psql -tAc "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'measurements' AND column_name = 'measurement_date'" | grep -q measurement_date; then
-    sudo -u postgres psql "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}" -f migrations/002_add_measurement_date.sql
+  if ! sudo -u postgres psql -d "${DB_NAME}" -tAc "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'measurements' AND column_name = 'measurement_date'" | grep -q measurement_date; then
+    sudo -u postgres psql -d "${DB_NAME}" -f migrations/002_add_measurement_date.sql
   fi
 }
 
