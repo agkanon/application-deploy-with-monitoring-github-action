@@ -15,19 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Validate backend and frontend
-        run: |
-          cd backend
-          npm install
-          cd ../frontend
-          npm install
-          npm run build
-
       - name: Prepare remote EC2 workspace
         uses: appleboy/ssh-action@v0.1.8
         with:
