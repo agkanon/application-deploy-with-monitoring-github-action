@@ -183,13 +183,10 @@ function start_backend_process() {
 function install_prometheus() {
   if [ ! -x /usr/local/bin/prometheus ]; then
     echo "Installing Prometheus ${PROM_VERSION}"
-    curl -fsSL -w "\n%{http_code}" -o /tmp/prometheus.tar.gz https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz
-    HTTP_CODE=$(tail -n1 /tmp/prometheus.tar.gz)
-    if [ "$HTTP_CODE" != "200" ]; then
-      echo "Error: Failed to download Prometheus (HTTP $HTTP_CODE). Please verify version ${PROM_VERSION} exists."
+    if ! curl -fsSL -o /tmp/prometheus.tar.gz https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz; then
+      echo "Error: Failed to download Prometheus. Please verify version ${PROM_VERSION} exists."
       return 1
     fi
-    sed -i '$d' /tmp/prometheus.tar.gz
     tar -xzf /tmp/prometheus.tar.gz -C /tmp
     sudo cp /tmp/prometheus-${PROM_VERSION}.linux-amd64/prometheus /usr/local/bin/
     sudo cp /tmp/prometheus-${PROM_VERSION}.linux-amd64/promtool /usr/local/bin/
@@ -206,13 +203,10 @@ function install_prometheus() {
 function install_alertmanager() {
   if [ ! -x /usr/local/bin/alertmanager ]; then
     echo "Installing Alertmanager ${ALERTMANAGER_VERSION}"
-    curl -fsSL -w "\n%{http_code}" -o /tmp/alertmanager.tar.gz https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz
-    HTTP_CODE=$(tail -n1 /tmp/alertmanager.tar.gz)
-    if [ "$HTTP_CODE" != "200" ]; then
-      echo "Error: Failed to download Alertmanager (HTTP $HTTP_CODE). Please verify version ${ALERTMANAGER_VERSION} exists."
+    if ! curl -fsSL -o /tmp/alertmanager.tar.gz https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz; then
+      echo "Error: Failed to download Alertmanager. Please verify version ${ALERTMANAGER_VERSION} exists."
       return 1
     fi
-    sed -i '$d' /tmp/alertmanager.tar.gz
     tar -xzf /tmp/alertmanager.tar.gz -C /tmp
     sudo cp /tmp/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/alertmanager /usr/local/bin/
     sudo mkdir -p /etc/alertmanager /var/lib/alertmanager
@@ -231,13 +225,10 @@ EOF
 function install_node_exporter() {
   if [ ! -x /usr/local/bin/node_exporter ]; then
     echo "Installing Node Exporter ${NODE_EXPORTER_VERSION}"
-    curl -fsSL -w "\n%{http_code}" -o /tmp/node_exporter.tar.gz https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
-    HTTP_CODE=$(tail -n1 /tmp/node_exporter.tar.gz)
-    if [ "$HTTP_CODE" != "200" ]; then
-      echo "Error: Failed to download Node Exporter (HTTP $HTTP_CODE). Please verify version ${NODE_EXPORTER_VERSION} exists."
+    if ! curl -fsSL -o /tmp/node_exporter.tar.gz https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz; then
+      echo "Error: Failed to download Node Exporter. Please verify version ${NODE_EXPORTER_VERSION} exists."
       return 1
     fi
-    sed -i '$d' /tmp/node_exporter.tar.gz
     tar -xzf /tmp/node_exporter.tar.gz -C /tmp
     sudo cp /tmp/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
     sudo useradd --system --no-create-home --shell /usr/sbin/nologin node_exporter || true
