@@ -1,0 +1,73 @@
+name: AWS EC2 Deploy with Observability
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Validate backend and frontend
+        run: |
+          cd backend
+          npm install
+          cd ../frontend
+          npm install
+          npm run build
+
+      - name: Prepare remote EC2 workspace
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          script: |
+            set -e
+            rm -rf /home/${{ secrets.AWS_EC2_USER }}/application-deploy-with-monitoring-github-action
+            mkdir -p /home/${{ secrets.AWS_EC2_USER }}/application-deploy-with-monitoring-github-action
+
+      - name: Sync repository to EC2
+        uses: appleboy/scp-action@v0.1.5
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: '.'
+          target: '/home/${{ secrets.AWS_EC2_USER }}/application-deploy-with-monitoring-github-action'
+
+      - name: Deploy app on EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/${{ secrets.AWS_EC2_USER }}/application-deploy-with-monitoring-github-action
+            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+            export SMTP_HOST='${{ secrets.SMTP_HOST }}'
+            export SMTP_PORT='${{ secrets.SMTP_PORT }}'
+            export SMTP_USER='${{ secrets.SMTP_USER }}'
+            export SMTP_PASSWORD='${{ secrets.SMTP_PASSWORD }}'
+            export SMTP_FROM='${{ secrets.SMTP_FROM }}'
+            export ALERT_EMAIL_TO='${{ secrets.ALERT_EMAIL_TO }}'
+            export GRAFANA_ADMIN_PASSWORD='${{ secrets.GRAFANA_ADMIN_PASSWORD }}'
+            export DB_USER='bmi_user'
+            export DB_NAME='bmidb'
+            export DB_HOST='localhost'
+            export DB_PORT='5432'
+            export FRONTEND_URL='http://localhost'
+            bash scripts/deploy-ec2.sh

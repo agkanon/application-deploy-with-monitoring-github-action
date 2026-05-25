@@ -1,0 +1,38 @@
+groups:
+  - name: system.rules
+    rules:
+      - alert: HighCpuUsage
+        expr: 1 - avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.85
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU utilization is above 85% for more than 3 minutes on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.85
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% for more than 3 minutes on {{ $labels.instance }}."
+
+      - alert: DiskSpaceCritical
+        expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 0.15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Available disk space is below 15% on {{ $labels.instance }} for more than 5 minutes."
+
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_receive_bytes_total[5m]) > 10000000 or rate(node_network_transmit_bytes_total[5m]) > 10000000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High network throughput"
+          description: "Network traffic is above 10MB/s for more than 5 minutes on {{ $labels.instance }}."
